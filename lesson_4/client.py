@@ -9,7 +9,7 @@ from common.variables import ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME, \
 from common.utils import get_message, send_message
 
 
-def create_presence(account_name='Guest'):
+def create_message(account_name='Guest'):
     '''
     Функция генерирует запрос о присутствии клиента
     :param account_name:
@@ -25,7 +25,7 @@ def create_presence(account_name='Guest'):
     return out
 
 
-def process_ans(message):
+def server_ans(message):
     '''
     Функция разбирает ответ сервера
     :param message:
@@ -38,10 +38,9 @@ def process_ans(message):
     raise ValueError
 
 
-def main():
-    '''
-    Загружаем параметы коммандной строки
-    :return:
+def get_argv():
+    '''Загружаем параметы коммандной строки
+    client.py 127.0.0.1 8888
     '''
     try:
         server_address = sys.argv[1]
@@ -52,21 +51,50 @@ def main():
         server_address = DEFAULT_IP_ADDRESS
         server_port = DEFAULT_PORT
     except ValueError:
-        print('В качастве порта может быть указано только число в диапазоне от 1024 до 65535.')
+        print('В качестве порта может быть указано только число в диапазоне от 1024 до 65535.')
         sys.exit(1)
+    return server_address, server_port
 
-    # Инициализация сокета и обмен
 
-    transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    transport.connect((server_address, server_port))
-    message_to_server = create_presence()
-    send_message(transport, message_to_server)
-    try:
-        answer = process_ans(get_message(transport))
-        print(answer)
-    except (ValueError, json.JSONDecodeError):
-        print('Не удалось декодировать сообщение сервера.')
+class ClientSocket(object):
+
+    def __init__(self, ip='', port=''):
+        self.server_port = port
+        self.server_address = ip
+
+    def __connect_to_server(self):
+        self.transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.transport.connect((self.server_address, self.server_port))
+
+    def print_client_params(self):
+        print(f'Порт сервера:{self.server_port}, адрес:{self.server_address}')
+
+    def client_init(self):
+        self.__connect_to_server()
+        message_to_server = create_message()
+        send_message(self.transport, message_to_server)
+        try:
+            answer = server_ans(get_message(self.transport))
+            print(answer)
+        except (ValueError, json.JSONDecodeError):
+            print('Не удалось декодировать сообщение сервера.')
+
+    def get_sent_message(self):
+        return create_message()
+
+    def get_answer_message(self):
+        self.__connect_to_server()
+        message_to_server = create_message()
+        send_message(self.transport, message_to_server)
+        return server_ans(get_message(self.transport))
 
 
 if __name__ == '__main__':
-    main()
+    ip, port = get_argv()
+
+    client = ClientSocket(ip, port)
+    client.print_client_params()
+    client.client_init()
+
+    print(client.get_sent_message())
+    print(client.get_answer_message())
