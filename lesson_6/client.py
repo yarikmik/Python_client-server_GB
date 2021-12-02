@@ -10,11 +10,14 @@ from common.variables import ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME, \
     RESPONSE, ERROR, DEFAULT_IP_ADDRESS, DEFAULT_PORT
 from common.utils import get_message, send_message
 from errors import ReqFieldMissingError
+from errors import IncorrectDataRecivedError
+from decorators import log, LogClass
 
 # Инициализируем клиентский логгер
 CLIENT_LOGGER = logging.getLogger('client')
 
-
+# @log
+@LogClass()
 def create_message(account_name='Guest'):
     '''
     Функция генерирует запрос о присутствии клиента
@@ -32,6 +35,8 @@ def create_message(account_name='Guest'):
     return out
 
 
+# @log
+@LogClass()
 def server_ans(message):
     '''
     Функция разбирает ответ сервера
@@ -46,6 +51,8 @@ def server_ans(message):
     raise ReqFieldMissingError(RESPONSE)
 
 
+# @log
+@LogClass()
 def get_argv():
     '''Загружаем параметы коммандной строки
     client.py 127.0.0.1 8888
@@ -87,6 +94,8 @@ class ClientSocket(object):
     def print_client_params(self):
         print(f'Порт сервера:{self.server_port}, адрес:{self.server_address}')
 
+    # @log
+    @LogClass()
     def client_init(self):
         self.__connect_to_server()
         message_to_server = create_message()
@@ -121,3 +130,4 @@ if __name__ == '__main__':
 
     # print(client.get_sent_message())
     # print(client.get_answer_message())
+    # print(sys.argv[0])

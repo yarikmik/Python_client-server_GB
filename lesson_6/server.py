@@ -9,11 +9,14 @@ from common.variables import ACTION, ACCOUNT_NAME, RESPONSE, MAX_CONNECTIONS, \
     PRESENCE, TIME, USER, ERROR, DEFAULT_PORT, DEFAULT_IP_ADDRESS
 from common.utils import get_message, send_message
 from errors import IncorrectDataRecivedError
+from decorators import log, LogClass
 
 # Инициализируем серверный логгер
 SERVER_LOGGER = logging.getLogger('server')
 
 
+# @log
+@LogClass()
 def process_client_message(message):
     '''
     Обработчик сообщений от клиентов, принимает словарь -
@@ -32,6 +35,8 @@ def process_client_message(message):
     }
 
 
+# @log
+@LogClass()
 def get_argv():
     '''
     Загрузка параметров командной строки, если нет параметров, то задаём значения по умоланию.
@@ -71,12 +76,13 @@ def get_argv():
             'После параметра \'a\'- необходимо указать адрес, который будет слушать сервер.')
         sys.exit(1)
 
-
     return listen_address, listen_port
 
 
 class ServerSocket(object):
 
+    # @log
+    @LogClass()
     def __init__(self, ip='', port=''):
         self.listen_port = port
         self.listen_address = ip
@@ -86,6 +92,8 @@ class ServerSocket(object):
     def print_server_params(self):
         print(f'Слушаем порт:{self.listen_port}, адрес:{self.listen_address}')
 
+    # @log
+    @LogClass()
     def server_init(self):
         # Готовим сокет
         self.transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -116,8 +124,6 @@ class ServerSocket(object):
                 client.close()
 
 
-
-
 if __name__ == '__main__':
     ip, port = get_argv()
 
@@ -125,5 +131,5 @@ if __name__ == '__main__':
     server.print_server_params()
     server.server_init()
 
-server = ServerSocket()
-server.server_init()
+# server = ServerSocket()
+# server.server_init()
