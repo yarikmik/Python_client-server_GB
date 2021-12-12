@@ -7,6 +7,7 @@ import time
 import logging
 import argparse
 import logs.config_client_log
+import threading
 from common.variables import ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME, \
     RESPONSE, ERROR, DEFAULT_IP_ADDRESS, DEFAULT_PORT, MESSAGE, MESSAGE_TEXT, SENDER, DESTINATION, EXIT
 from common.utils import get_message, send_message
@@ -160,6 +161,20 @@ def get_argv():
     return server_address, server_port, client_name
 
 
+class MessageThreading(threading.Thread):
+    """Класс для создания потоков """
+
+    def __init__(self, func, *args):
+        super().__init__()
+        self.daemon = True
+        self.func = func
+        self.args = args
+
+    def run(self) -> None:
+        while True:
+            self.func(*self.args)
+
+
 class ClientSocket(object):
     __slots__ = ('server_port', 'server_address', 'client_name', 'transport')
 
@@ -211,13 +226,16 @@ class ClientSocket(object):
         else:
             # Если соединение с сервером установлено корректно,
             # запускаем клиенский процесс приёма сообщний
-            receiver = self.threading.Thread(target=message_from_server, args=(self.transport, self.client_name))
-            receiver.daemon = True
+            # receiver = threading.Thread(target=message_from_server, args=(self.transport, self.client_name))
+            # receiver.daemon = True
+
+            receiver = MessageThreading(message_from_server, self.transport, self.client_name)
             receiver.start()
 
             # затем запускаем отправку сообщений и взаимодействие с пользователем.
-            user_interface = self.threading.Thread(target=user_interactive, args=(self.transport, self.client_name))
-            user_interface.daemon = True
+            # user_interface = threading.Thread(target=user_interactive, args=(self.transport, self.client_name))
+            # user_interface.daemon = True
+            user_interface = MessageThreading(user_interactive, self.transport, self.client_name)
             user_interface.start()
             CLIENT_LOGGER.debug('Запущены процессы')
 

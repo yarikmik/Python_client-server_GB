@@ -143,10 +143,13 @@ class ServerSocket(object):
         # Слушаем порт
         transport.listen(MAX_CONNECTIONS)
 
+        # Словарь, содержащий имена пользователей и соответствующие им сокеты.
+        names = dict()
+
         # список клиентов , очередь сообщений
         clients = []
         messages = []
-
+        err_lst = []
         while True:
             try:
                 client, client_address = transport.accept()
@@ -160,8 +163,7 @@ class ServerSocket(object):
             recv_data_lst = []
             send_data_lst = []
 
-            # Словарь, содержащий имена пользователей и соответствующие им сокеты.
-            names = dict()
+
 
             # Проверяем на наличие ждущих клиентов
             try:
@@ -178,7 +180,7 @@ class ServerSocket(object):
                                                messages, client_with_message, clients, names)
                     except Exception:
                         SERVER_LOGGER.info(f'Клиент {client_with_message.getpeername()} '
-                                    f'отключился от сервера.')
+                                           f'отключился от сервера.')
                         clients.remove(client_with_message)
 
             # Если есть сообщения, обрабатываем каждое.
